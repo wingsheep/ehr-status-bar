@@ -1,7 +1,7 @@
 {
   "name": "ehr-status-bar",
   "version": "1.0.0",
-  "description": "An Electron application for recording the push-card status of an EHR",
+  "description": "An Electron application based on EHR data displaying daily working hours.",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
