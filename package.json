@@ -14,6 +14,6 @@
   ],
   "author": "wingsheep",
   "devDependencies": {
-    "electron": "^31.0.2"
+    "electron": "^31.1.0"
   }
 }
