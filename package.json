@@ -1,0 +1,19 @@
+{
+  "name": "ehr-status-bar",
+  "version": "1.0.0",
+  "description": "An Electron application for recording the push-card status of an EHR",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/wingsheep/ehr-status-bar",
+  "keywords": [
+    "Electron",
+    "Ehr",
+    "Push-card"
+  ],
+  "author": "wingsheep",
+  "devDependencies": {
+    "electron": "^31.0.2"
+  }
+}
