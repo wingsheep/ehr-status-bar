@@ -1,6 +1,6 @@
 # ehr-status-bar
 
-An Electron application for recording the push-card status of an EHR
+**An Electron application for recording the push-card status of an EHR.**
 
 ## To Use
 
