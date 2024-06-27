@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const { app, dialog, BrowserWindow, Tray, Menu, nativeTheme, nativeImage, Notification } = require('electron')
+const { app, BrowserWindow, Tray, Menu, nativeTheme, nativeImage, Notification } = require('electron')
 const path = require('node:path')
 
 function addHoursToDateTime(baseDateTime, hoursToAdd) {
@@ -170,10 +170,10 @@ function createWindow () {
               haveGotSupper = true;
             }
           }
-          // 如果是23:59:59，清除定时器
-          if (overtimeHours / 1000 / 60 < 1) {
-            tray.setTitle('休闲中~');
-            intervalId && clearInterval(intervalId);
+          // 如果当天时间是23:59:59，判断清除定时器
+          if (new Date().getHours() === 23 && new Date().getMinutes() === 59 && new Date().getSeconds() === 59) {
+            clearInterval(intervalId);
+            resetWindow();
           }
         }
       }
