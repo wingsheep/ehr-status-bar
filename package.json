@@ -43,6 +43,6 @@
   "author": "wingsheep",
   "devDependencies": {
     "electron": "^31.0.2",
-    "electron-builder": "^latest"
+    "electron-builder": "^24.13.3"
   }
 }
