@@ -20,6 +20,8 @@ function addHoursToDateTime(baseDateTime, hoursToAdd) {
 };
 let tray = null
 let mainWindow = null
+let intervalId = null;
+
 // 在状态栏添加图标
 function createTray() {
   const iconPath = path.join(__dirname, 'icon.png');
@@ -63,18 +65,18 @@ function createWindow () {
     }
   })
   mainWindow.loadURL('https://www.italent.cn')
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.executeJavaScript(`
       (async () => {
         try {
-          function getTodayRange() {
+          function getTodayRange(symbol) {
             const today = new Date();
             const yyyy = today.getFullYear();
             const MM = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             const dateStr = yyyy + '/' + MM + '/' + dd
-            return dateStr + '~' + dateStr
+            return dateStr + symbol + dateStr
           }
           const res = await fetch("https://cloud.italent.cn/api/v2/UI/TableList?viewName=Attendance.SingleObjectListView.EmpAttendanceDataList&metaObjName=Attendance.AttendanceStatistics&app=Attendance&PaaS-SourceApp=Attendance&PaaS-CurrentView=Attendance.AttendanceDataRecordNavView&shadow_context=%7BappModel%3A%22italent%22%2Cuppid%3A%221%22%7D", {
             headers: {
@@ -105,8 +107,8 @@ function createWindow () {
                     name: "Attendance.AttendanceStatistics.SwipingCardDate",
                     num: "2",
                     queryAreaSubNodes: false,
-                    text: getTodayRange(),
-                    value: getTodayRange()
+                    text: getTodayRange('~'),
+                    value: getTodayRange('-')
                   }
                 ],
                 searchFormFilterJson: null
@@ -116,15 +118,22 @@ function createWindow () {
           });
           if (!res.ok) return null;
           const resJson = await res.json();
-          const { ActualForFirstCard }= resJson?.biz_data[0];
-          return ActualForFirstCard?.value;
+          const { ActualForFirstCard, ActualForLastCard } = resJson?.biz_data[0];
+          return {
+            start: ActualForFirstCard?.value,
+            end: ActualForLastCard?.value
+          }
         } catch (error) {
           console.error('Error fetching data:', error);
         }
       })();
-    `).then((clockInTime) => {
-      if(!clockInTime) return tray.setTitle('暂无数据，点击刷新')
-      const offDutyTime = addHoursToDateTime(clockInTime, 9.5)
+    `).then((cardTime) => {
+      const { start, end } = cardTime
+      if(!start) return tray.setTitle('暂无数据，点击刷新')
+      if (end) {
+        return tray.setTitle(`昨日下班已打卡：${end.split(' ')[1]}`)
+      }
+      const offDutyTime = addHoursToDateTime(start, 9.5)
       const getShowStr = (text, timeDifference) => {
         const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
@@ -138,7 +147,7 @@ function createWindow () {
       const targetDate = new Date(offDutyTime).getTime();
       let hasShownEndMessage = false;
       let haveGotSupper = false;
-      let intervalId = null;
+      intervalId && clearInterval(intervalId);
       // 更新倒计时的函数
       async function updateCountdown () {
         const now = new Date().getTime();
@@ -172,8 +181,8 @@ function createWindow () {
           }
           // 如果当天时间是23:59:59，判断清除定时器
           if (new Date().getHours() === 23 && new Date().getMinutes() === 59 && new Date().getSeconds() === 59) {
-            clearInterval(intervalId);
-            resetWindow();
+            intervalId && clearInterval(intervalId);
+            resetWindow()
           }
         }
       }
@@ -239,6 +248,14 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
+
+
+app.on('before-quit', () => {
+  // 在应用退出前销毁托盘对象
+  if (tray) {
+    tray.destroy();
+  }
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
