@@ -32,7 +32,11 @@ function createTray() {
     {
       label: '打开主窗口',
       click: () => {
-        mainWindow.show();
+        if (!mainWindow) {
+          createWindow();
+        } else {
+          mainWindow.show();
+        }
       },
     },
     {
@@ -44,6 +48,8 @@ function createTray() {
     {
       label: '退出',
       click: () => {
+        app.isQuiting = true;
+        if (tray) tray.destroy();
         app.quit();
       },
     },
@@ -65,7 +71,7 @@ function createWindow () {
     }
   })
   mainWindow.loadURL('https://www.italent.cn')
-  mainWindow.webContents.openDevTools()
+  process.env.NODE_ENV === 'development' && mainWindow.webContents.openDevTools()
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.executeJavaScript(`
       (async () => {
@@ -194,7 +200,7 @@ function createWindow () {
     });
   });
   mainWindow.on('close', (event) => {
-    if (!app.isQuitting) {
+    if (!app.isQuiting) {
       event.preventDefault();
       mainWindow.hide();
     }
@@ -240,6 +246,9 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+  if (process.platform === 'darwin') {
+    app.dock.hide();
+  }
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -249,13 +258,6 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
 
-
-app.on('before-quit', () => {
-  // 在应用退出前销毁托盘对象
-  if (tray) {
-    tray.destroy();
-  }
-});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
