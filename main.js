@@ -5,7 +5,14 @@ const path = require('node:path')
 function addHoursToDateTime(baseDateTime, hoursToAdd) {
   const [datePart, timePart] = baseDateTime.split(' ');
   const [year, month, day] = datePart.split('/');
-  const [hours, minutes, seconds] = timePart.split(':');
+  let [hours, minutes, seconds] = timePart.split(':');
+  // 如果小于8:30则重置为8:30
+  if (parseInt(hours) <= 8 && parseInt(minutes) < 30) {
+    hours = '08';
+    minutes = '30'
+    seconds = '00';
+  }
+  console.log(hours, minutes)
   const dateTime = new Date(year, month - 1, day, hours, minutes, seconds);
   const resultDateTime = new Date(dateTime.getTime() + hoursToAdd * 3600000);
 
